@@ -3,7 +3,11 @@ export default {
   content: ["./src/**/*.{js,ts,jsx,tsx}",
 ],
   theme: {
-    extend: {},
+    extend: {
+       colors: {
+        darkGreen: '#064e3b',
+      },
+    },
   },
   plugins: [],
 }
