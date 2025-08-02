@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import errorHandler from "./src/middlewares/errorHandler.js";
+import userRoutes from "./src/routes/authRoutes/authRoutes.js";
 
 dotenv.config();
 
@@ -18,9 +19,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
+//routes
+app.use("/api/auth", userRoutes);
 
 app.use((req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
