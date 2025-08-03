@@ -11,24 +11,33 @@ import {
   IconButton
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { signIn } from "../../features/auth/authSlice";
+import { signIn, setCredentials } from "../../features/auth/authSlice";
 import ForgotPasswordDialog from "./ForgotPasswordDialog";
+
+import { useNavigate } from "react-router-dom";
 
 const SignInForm = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); 
   const { loading } = useSelector((state) => state.auth);
+
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({ 
-    usernameOrEmail: "", 
-    password: "" 
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
   });
   const [errors, setErrors] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.usernameOrEmail) newErrors.usernameOrEmail = "Required";
-    if (!formData.password) newErrors.password = "Required";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.email) newErrors.email = "Email is required";
+    else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email format";
+
+    if (!formData.password) newErrors.password = "Password is required";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -36,34 +45,40 @@ const SignInForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validate()) return;
-    
-    dispatch(
-      signIn({
-        username: formData.usernameOrEmail.includes("@") 
-          ? undefined 
-          : formData.usernameOrEmail,
-        email: formData.usernameOrEmail.includes("@") 
-          ? formData.usernameOrEmail 
-          : undefined,
-        password: formData.password,
-      })
-    );
+
+    dispatch(signIn({
+      email: formData.email,
+      password: formData.password
+    })).then((action) => {
+      if (signIn.fulfilled.match(action)) {
+        dispatch(setCredentials({
+          user: action.payload.user,
+          accessToken: action.payload.accessToken
+        }));
+
+        if (action.payload.user.role === 'Student') {
+          navigate('/student');
+        } else if (action.payload.user.role === 'Instructor') {
+          navigate('/instructor');
+        }
+      }
+    });
   };
 
   return (
     <>
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
         <TextField
-          label="Username or Email"
+          label="Email"
           fullWidth
           margin="normal"
           required
-          error={!!errors.usernameOrEmail}
-          helperText={errors.usernameOrEmail}
-          value={formData.usernameOrEmail}
-          onChange={(e) => setFormData({ ...formData, usernameOrEmail: e.target.value })}
+          error={!!errors.email}
+          helperText={errors.email}
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
         />
-        
+
         <TextField
           label="Password"
           type={showPassword ? "text" : "password"}
@@ -84,23 +99,23 @@ const SignInForm = () => {
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
-            )
+            ),
           }}
         />
-        
+
         <Grid container sx={{ mt: 1, mb: 2 }}>
           <Grid item xs>
-            <Link 
-              component="button" 
-              variant="body2" 
+            <Link
+              component="button"
+              variant="body2"
               onClick={() => setOpenDialog(true)}
-              sx={{ textAlign: 'left' }}
+              sx={{ textAlign: "left" }}
             >
               Forgot password?
             </Link>
           </Grid>
         </Grid>
-        
+
         <Button
           type="submit"
           fullWidth
@@ -111,10 +126,10 @@ const SignInForm = () => {
           {loading ? <CircularProgress size={24} /> : "Sign In"}
         </Button>
       </Box>
-      
-      <ForgotPasswordDialog 
-        open={openDialog} 
-        onClose={() => setOpenDialog(false)} 
+
+      <ForgotPasswordDialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
       />
     </>
   );

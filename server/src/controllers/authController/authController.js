@@ -1,8 +1,11 @@
 import User from "../../models/User.js";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { sendEmail } from "../../services/emailService.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/tokenUtils.js";
-import crypto from "crypto";
+
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
 export const userRegister = async (req, res) => {
   const { name, email, password, role } = req.body;
@@ -31,7 +34,7 @@ export const userRegister = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      isApproved: role === "Admin" 
+      isApproved: role === "Admin"
     });
 
     res.status(201).json({
@@ -77,12 +80,20 @@ export const userLogin = async (req, res) => {
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
+     user.tokenVersion = user.tokenVersion || 0;
+await user.save();
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.status(200).json({
       success: true,
       message: "Login successful",
       accessToken,
-      refreshToken,
       user
     });
   } catch (error) {
@@ -91,8 +102,87 @@ export const userLogin = async (req, res) => {
       message: "Login failed",
       error: error.message
     });
+   
   }
 };
+
+export const refreshToken = async (req, res) => {
+  const token = req.cookies.refreshToken;
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: "Authorization required"
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.tokenVersion !== decoded.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token"
+      });
+    }
+
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      accessToken: newAccessToken
+    });
+  } catch (error) {
+    res.status(403).json({
+      success: false,
+      message: "Invalid token",
+      error: error.message
+    });
+  }
+};
+
+export const userLogout = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.clearCookie("refreshToken").status(200).json({
+        success: true,
+        message: "Logout successful"
+      });
+    }
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $inc: { tokenVersion: 1 }
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logout successful"
+    });
+  } catch (error) {
+    res.clearCookie("refreshToken");
+    res.status(500).json({
+      success: false,
+      message: "Logout failed",
+      error: error.message
+    });
+  }
+};
+
 
 export const getUsers = async (req, res) => {
   try {
@@ -106,44 +196,6 @@ export const getUsers = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch users",
-      error: error.message
-    });
-  }
-}
-
-export const refreshToken = async (req, res) => {
-  const { refreshToken } = req.body;
-  
-  if (!refreshToken) {
-    return res.status(401).json({
-      success: false,
-      message: "Authorization required"
-    });
-  }
-
-  try {
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await User.findById(decoded.id);
-    
-    if (!user || user.tokenVersion !== decoded.tokenVersion) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token"
-      });
-    }
-
-    const newAccessToken = generateAccessToken(user);
-    const newRefreshToken = generateRefreshToken(user);
-
-    res.status(200).json({
-      success: true,
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken
-    });
-  } catch (error) {
-    res.status(403).json({
-      success: false,
-      message: "Invalid token",
       error: error.message
     });
   }
@@ -162,7 +214,7 @@ export const forgotPassword = async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetTokenExpiry = Date.now() + 3600000; 
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
 
     user.resetToken = resetToken;
     user.resetTokenExpiry = resetTokenExpiry;
@@ -170,7 +222,7 @@ export const forgotPassword = async (req, res) => {
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
     const message = `You requested a password reset. Click here to reset: ${resetUrl}`;
-    
+
     await sendEmail(
       user.email,
       "Password Reset Request",
@@ -218,7 +270,7 @@ export const resetPassword = async (req, res) => {
     user.tokenVersion += 1;
     user.resetToken = undefined;
     user.resetTokenExpiry = undefined;
-    
+
     await user.save();
 
     res.status(200).json({
@@ -229,25 +281,6 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Password reset failed",
-      error: error.message
-    });
-  }
-};
-
-export const userLogout = async (req, res) => {
-  try {
-    await User.findByIdAndUpdate(req.user.id, {
-      $inc: { tokenVersion: 1 }
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Logout successful"
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Logout failed",
       error: error.message
     });
   }

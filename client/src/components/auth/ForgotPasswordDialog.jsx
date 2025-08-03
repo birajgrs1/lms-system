@@ -1,42 +1,46 @@
 import { useState } from "react";
-import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  Button, 
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
   TextField,
   CircularProgress,
-  Alert
+  Alert,
 } from "@mui/material";
+
+import { useDispatch } from "react-redux";
+import { forgotPassword } from "../../features/auth/authSlice";
+
 
 const ForgotPasswordDialog = ({ open, onClose }) => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const handleSubmit = async () => {
     if (!email) {
       setError("Email is required");
       return;
     }
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError("Please enter a valid email");
       return;
     }
-    
+
     try {
       setLoading(true);
       setError("");
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await dispatch(forgotPassword(email));
       setSuccess(true);
     } catch (err) {
-      setError("Failed to send reset link");
       console.error(err);
+      setError("Failed to send reset link");
     } finally {
       setLoading(false);
     }
@@ -54,7 +58,7 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle sx={{ pb: 1 }}>Reset Password</DialogTitle>
-      
+
       <DialogContent sx={{ minWidth: 400 }}>
         {success ? (
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -79,20 +83,14 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
           </>
         )}
       </DialogContent>
-      
+
       <DialogActions>
         <Button onClick={handleClose} color="inherit">
           {success ? "Close" : "Cancel"}
         </Button>
         {!success && (
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained"
-            disabled={loading}
-          >
-            {loading 
-              ? <CircularProgress size={24} /> 
-              : "Send Reset Link"}
+          <Button onClick={handleSubmit} variant="contained" disabled={loading}>
+            {loading ? <CircularProgress size={24} /> : "Send Reset Link"}
           </Button>
         )}
       </DialogActions>
@@ -101,3 +99,5 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
 };
 
 export default ForgotPasswordDialog;
+
+

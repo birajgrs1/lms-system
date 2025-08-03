@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import {
   userRegister,
   userLogin,
@@ -6,8 +7,9 @@ import {
   refreshToken,
   forgotPassword,
   resetPassword,
-  getUsers
-} from '../../controllers/authController/authController.js';
+  getUsers,
+} from "../../controllers/authController/authController.js";
+
 import { authMiddleware } from "../../middlewares/authMiddleWare.js";
 
 const router = Router();

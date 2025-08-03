@@ -37,10 +37,16 @@ const SignUpForm = () => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-    dispatch(signUp(formData));
-  };
+  e.preventDefault();
+  if (!validate()) return;
+  
+  dispatch(signUp({
+    username: formData.username,
+    email: formData.email,
+    password: formData.password
+  }));
+};
+
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
