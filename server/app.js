@@ -11,12 +11,14 @@ const app = express();
 
 const corsOptions = {
   origin: process.env.CLIENT_URL,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
+console.log("CORS Origin Allowed:", process.env.CLIENT_URL);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -33,3 +35,6 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 export default app;
+
+
+// https://mockbin.io/

@@ -23,9 +23,9 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["Student", "Instructor", "Unapproved"],
+    enum: ["Student", "Instructor"],
     required: [true, "Role is required"],
-    default: "Unapproved"
+    default: "Student"
   },
   isApproved: {
     type: Boolean,
