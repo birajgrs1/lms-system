@@ -9,12 +9,12 @@ const ProtectedRoute = ({ allowedRoles }) => {
   if (!user.isApproved) return <Navigate to="/pending-approval" replace />;
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'Student') {
-      return <Navigate to="/student" replace />;
-    } else if (user.role === 'Instructor') {
-      return <Navigate to="/instructor" replace />;
-    }
-    return <Navigate to="/" replace />;
+    const roleToPath = {
+      Student: "/dashboard",
+      Instructor: "/dashboard"
+    };
+    
+    return <Navigate to={roleToPath[user.role] || "/"} replace />;
   }
 
   return <Outlet />;

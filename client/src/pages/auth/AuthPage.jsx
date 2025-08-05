@@ -13,11 +13,7 @@ const AuthPage = () => {
   const [mode, setMode] = useState("signin");
 
   if (user) {
-    if (user.role === "Student") {
-      return <Navigate to="/student" replace />;
-    } else if (user.role === "Instructor") {
-      return <Navigate to="/instructor" replace />;
-    }
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

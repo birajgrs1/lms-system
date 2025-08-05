@@ -11,9 +11,8 @@ import {
   IconButton
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { signIn, setCredentials } from "../../features/auth/authSlice";
+import { signIn } from "../../features/auth/authSlice";
 import ForgotPasswordDialog from "./ForgotPasswordDialog";
-
 import { useNavigate } from "react-router-dom";
 
 const SignInForm = () => {
@@ -49,19 +48,13 @@ const SignInForm = () => {
     dispatch(signIn({
       email: formData.email,
       password: formData.password
-    })).then((action) => {
-      if (signIn.fulfilled.match(action)) {
-        dispatch(setCredentials({
-          user: action.payload.user,
-          accessToken: action.payload.accessToken
-        }));
-
-        if (action.payload.user.role === 'Student') {
-          navigate('/student');
-        } else if (action.payload.user.role === 'Instructor') {
-          navigate('/instructor');
-        }
-      }
+    }))
+    .unwrap()
+    .then(() => {
+      navigate('/dashboard');
+    })
+    .catch((error) => {
+      console.error('Login failed:', error);
     });
   };
 
