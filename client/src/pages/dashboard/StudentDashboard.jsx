@@ -10,7 +10,6 @@ const StudentDashboard = () => {
         Welcome to your learning dashboard. Here you can access your courses, 
         track your progress, and interact with instructors.
       </Typography>
-      {/* Add student-specific content here */}
     </Box>
   );
 };
