@@ -1,84 +1,114 @@
-import { useState } from 'react';
-import { Menu, Book, LayoutDashboard, User } from 'lucide-react';
-import Dashboard from "../../components/instructor-view/dashboard/Index.jsx";
-import InstructorCourse from "../../components/instructor-view/courses/InstructorCourse.jsx";
+import { useState } from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import { 
+  Menu, 
+  Book, 
+  LayoutDashboard, 
+  User, 
+  X,
+  GraduationCap
+} from "lucide-react";
 
 const menuItems = [
   {
     icon: LayoutDashboard,
-    label: 'Dashboard',
-    value: 'dashboard',
-    component: <Dashboard />
+    label: "Dashboard",
+    to: "/dashboard",
   },
   {
     icon: Book,
-    label: 'Courses',
-    value: 'courses',
-    component: <InstructorCourse />
+    label: "Courses",
+    to: "/dashboard/courses",
   },
   {
     icon: User,
-    label: 'Profile',
-    value: 'profile',
-    component: <div>Profile Content</div>  
-  }
+    label: "Profile",
+    to: "/dashboard/profile",
+  },
 ];
 
-const InstructorDashboard = () => {
+const InstructorLayout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
 
-  const handleDrawerToggle = () => {
+  const toggleDrawer = () => {
     setMobileOpen(!mobileOpen);
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-50">
+      <button
+        className={`fixed z-50 top-4 left-4 p-2 rounded-md bg-blue-600 text-white shadow-lg transition-opacity sm:hidden ${
+          mobileOpen ? "opacity-0" : "opacity-100"
+        }`}
+        onClick={toggleDrawer}
+        aria-label="Open menu"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
 
-      <aside className={`fixed inset-0 sm:relative z-40 top-0 left-0 h-full w-64 bg-white shadow-md transition-transform duration-300 sm:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex items-center justify-between bg-blue-600 text-white px-4 py-4">
-          <span className="text-lg font-semibold">Instructor</span>
-          <button className="sm:hidden" onClick={handleDrawerToggle}>
-            <Menu className="h-5 w-5" />
-          </button>
+      <aside
+        className={`fixed inset-y-0 left-0 mt-16 z-40 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out sm:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between bg-blue-600 text-white px-4 py-4">
+            <div className="flex items-center space-x-2">
+              <GraduationCap className="h-8 w-8" />
+              <span className="text-xl font-bold">EduHub</span>
+            </div>
+            <button
+              className="sm:hidden"
+              onClick={toggleDrawer}
+              aria-label="Close menu"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto py-4">
+            <ul>
+              {menuItems.map(({ icon, label, to }) => {
+                const Icon = icon;
+                return (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      onClick={() => setMobileOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center px-6 py-3 my-1 text-left text-base transition-all duration-200 font-medium ${
+                          isActive
+                            ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`
+                      }
+                    >
+                      <Icon className="mr-4 h-5 w-5" />
+                      <span>{label}</span>
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
         </div>
-
-        <nav className="mt-8">
-          <ul>
-            {menuItems.map((item) => (
-              <li key={item.value}>
-                <button
-                  onClick={() => {
-                    setActiveTab(item.value);
-                    setMobileOpen(false);
-                  }}
-                  className={`flex items-center w-full px-6 py-3 text-left text-sm hover:bg-gray-200 transition duration-300 font-semibold ${activeTab === item.value ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600' : 'text-gray-700'}`}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  <span>{item.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </aside>
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-30 sm:hidden"
-          onClick={handleDrawerToggle}
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 sm:hidden"
+          onClick={toggleDrawer}
+          aria-hidden="true"
         />
       )}
 
-      <div className="flex-1 flex flex-col sm:ml-46 sm:mr-8">
-        <main className="p-4 sm:p-6 flex-1">
-          <div className="bg-white rounded-lg shadow p-6">
-            {menuItems.find((item) => item.value === activeTab)?.component}
-          </div>
-        </main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="sm:ml-64">
+          <Outlet />
+        </div>
       </div>
     </div>
   );
 };
 
-export default InstructorDashboard;
+export default InstructorLayout;

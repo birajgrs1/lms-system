@@ -6,9 +6,9 @@ import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import store from "./app/store";
 import { Provider } from "react-redux";
-import { setStore } from "./app/storeRef"; // Add this
+import { setStore } from "./app/storeRef"; 
 
-setStore(store); // Inject store before rendering
+setStore(store); 
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

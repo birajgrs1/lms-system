@@ -1,16 +1,11 @@
-import { useState } from 'react';
-import { Outlet, Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  Avatar,
-  IconButton,
-  Menu,
-  MenuItem,
-} from '@mui/material';
-import { GraduationCap } from 'lucide-react';
-import { logoutUser } from '../../features/auth/authSlice';
-import { useNavigate } from 'react-router-dom';
-
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Avatar, IconButton, Menu, MenuItem } from "@mui/material";
+import { GraduationCap } from "lucide-react";
+import { logoutUser } from "../../features/auth/authSlice";
+import { useNavigate,  } from "react-router-dom";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
 
 const DashboardLayout = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -22,11 +17,10 @@ const DashboardLayout = () => {
   const handleClose = () => setAnchorEl(null);
 
   const handleLogout = () => {
-  navigate('/auth');
-  dispatch(logoutUser());
-  handleClose();
-};
- 
+    navigate("/auth");
+    dispatch(logoutUser());
+    handleClose();
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -40,16 +34,11 @@ const DashboardLayout = () => {
         </Link>
 
         <div className="flex items-center space-x-2">
+          <div className="mr-2 text-sm font-medium">{user?.name}</div>
           <IconButton onClick={handleMenu} size="small">
-            <Avatar sx={{ width: 32, height: 32 }}>
-              {user?.name?.charAt(0)}
-            </Avatar>
+            <Avatar sx={{ width: 32, height: 32 }}>{user?.name?.charAt(0)}</Avatar>
           </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
             <MenuItem disabled>{user?.name}</MenuItem>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
