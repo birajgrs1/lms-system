@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import errorHandler from "./src/middlewares/errorHandler.js";
 import userRoutes from "./src/routes/authRoutes/authRoutes.js";
+import mediaRoutes from "./src/routes/instructorRoutes/mediaRoutes.js"
 import cookieParser from 'cookie-parser';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use(cookieParser());
 
 //routes
 app.use("/api/auth", userRoutes);
+app.use("/api/media", mediaRoutes);
 
 app.use((req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
